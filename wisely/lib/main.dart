@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:wisely/blocs/audio/player_cubit.dart';
 import 'package:wisely/blocs/audio/recorder_cubit.dart';
 import 'package:wisely/blocs/journal_entities_cubit.dart';
@@ -29,8 +32,67 @@ void main() async {
   // Bloc.observer = MyBlocObserver();
 }
 
-class WiselyApp extends StatelessWidget {
+class WiselyApp extends StatefulWidget {
   const WiselyApp({Key? key}) : super(key: key);
+
+  @override
+  _WiselyAppState createState() => _WiselyAppState();
+}
+
+class _WiselyAppState extends State<WiselyApp> {
+  late StreamSubscription _intentDataStreamSubscription;
+  List<SharedMediaFile>? _sharedFiles;
+  String? _sharedText;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // For sharing images coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
+        .listen((List<SharedMediaFile> value) {
+      debugPrint(
+          'Shared when in memory: ${value.map((f) => f.path).join(',')}');
+      setState(() {
+        _sharedFiles = value;
+      });
+    }, onError: (err) {
+      debugPrint('getIntentDataStream error: $err');
+    });
+
+    // For sharing images coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile> value) {
+      debugPrint('Shared when closed: ${value.map((f) => f.path).join(',')}');
+      setState(() {
+        _sharedFiles = value;
+      });
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getTextStream().listen((String value) {
+      setState(() {
+        _sharedText = value;
+      });
+    }, onError: (err) {
+      debugPrint('getLinkStream error: $err');
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String? value) {
+      debugPrint('Shared text when closed: $value');
+      setState(() {
+        _sharedText = value;
+      });
+      return value;
+    });
+  }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,16 +159,6 @@ class WiselyApp extends StatelessWidget {
 
 class WiselyHomePage extends StatefulWidget {
   const WiselyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
