@@ -152,7 +152,7 @@ class _WiselyAppState extends State<WiselyApp> {
         theme: ThemeData(
           primarySwatch: Colors.grey,
         ),
-        home: const WiselyHomePage(title: 'WISELY'),
+        home: WiselyHomePage(title: 'WISELY $_sharedText'),
       ),
     );
   }
