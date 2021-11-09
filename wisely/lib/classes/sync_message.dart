@@ -7,9 +7,13 @@ part 'sync_message.g.dart';
 
 @freezed
 class SyncMessage with _$SyncMessage {
-  factory SyncMessage.journalDbEntity({
+  factory SyncMessage.syncJournalEntity({
     required JournalEntity journalEntity,
-  }) = SyncJournalDbEntity;
+  }) = SyncJournalEntity;
+
+  factory SyncMessage.syncQuantitativeEntries({
+    required List<QuantitativeEntry> entries,
+  }) = SyncQuantitativeEntries;
 
   factory SyncMessage.fromJson(Map<String, dynamic> json) =>
       _$SyncMessageFromJson(json);

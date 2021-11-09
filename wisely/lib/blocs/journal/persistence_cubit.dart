@@ -54,35 +54,65 @@ class PersistenceCubit extends Cubit<PersistenceState> {
     await transaction.finish();
   }
 
-  Future<bool> createQuantitativeEntry(QuantitativeData data) async {
+  Future<bool> createQuantitativeEntries(List<QuantitativeData> data) async {
     final transaction =
-        Sentry.startTransaction('createQuantitativeEntry()', 'task');
-    try {
-      DateTime now = DateTime.now();
-      VectorClock vc = _vectorClockCubit.getNextVectorClock();
+        Sentry.startTransaction('createQuantitativeEntries()', 'task');
 
-      // avoid inserting the same external entity multiple times
-      String id = uuid.v5(Uuid.NAMESPACE_NIL, json.encode(data));
+    List<QuantitativeEntry> quantEntries = [];
 
-      DateTime dateFrom = data.dateFrom;
-      DateTime dateTo = data.dateTo;
+    for (QuantitativeData item in data) {
+      try {
+        DateTime now = DateTime.now();
+        VectorClock vc = _vectorClockCubit.getNextVectorClock();
 
-      JournalEntity journalEntity = JournalEntity.quantitative(
-        data: data,
-        meta: Metadata(
-          createdAt: now,
-          updatedAt: now,
-          dateFrom: dateFrom,
-          dateTo: dateTo,
-          id: id,
-          vectorClock: vc,
-          timezone: await FlutterNativeTimezone.getLocalTimezone(),
-          utcOffset: now.timeZoneOffset.inMinutes,
-        ),
-      );
-      await createDbEntity(journalEntity, enqueueSync: true);
-    } catch (exception, stackTrace) {
-      await Sentry.captureException(exception, stackTrace: stackTrace);
+        // avoid inserting the same external entity multiple times
+        String id = uuid.v5(Uuid.NAMESPACE_NIL, json.encode(item));
+
+        DateTime dateFrom = item.dateFrom;
+        DateTime dateTo = item.dateTo;
+
+        JournalEntity journalEntity = JournalEntity.quantitative(
+          data: item,
+          meta: Metadata(
+            createdAt: now,
+            updatedAt: now,
+            dateFrom: dateFrom,
+            dateTo: dateTo,
+            id: id,
+            vectorClock: vc,
+            timezone: await FlutterNativeTimezone.getLocalTimezone(),
+            utcOffset: now.timeZoneOffset.inMinutes,
+          ),
+        );
+        if (journalEntity is QuantitativeEntry) {
+          quantEntries.add(journalEntity);
+        }
+      } catch (exception, stackTrace) {
+        await Sentry.captureException(exception, stackTrace: stackTrace);
+      }
+    }
+
+    addQuantitativeEntries(quantEntries);
+
+    if (quantEntries.isNotEmpty) {
+      _outboundQueueCubit.enqueueMessage(
+          SyncMessage.syncQuantitativeEntries(entries: quantEntries));
+    }
+
+    await transaction.finish();
+    return true;
+  }
+
+  Future<bool> addQuantitativeEntries(List<QuantitativeEntry> entries) async {
+    final transaction =
+        Sentry.startTransaction('addQuantitativeEntries()', 'task');
+
+    for (QuantitativeEntry entry in entries) {
+      try {
+        await createDbEntity(entry, enqueueSync: false);
+      } catch (exception, stackTrace) {
+        await Sentry.captureException(exception, stackTrace: stackTrace);
+      }
     }
 
     await transaction.finish();
@@ -175,7 +205,7 @@ class PersistenceCubit extends Cubit<PersistenceState> {
 
       if (saved && enqueueSync) {
         _outboundQueueCubit.enqueueMessage(
-            SyncMessage.journalDbEntity(journalEntity: journalEntity));
+            SyncMessage.syncJournalEntity(journalEntity: journalEntity));
       }
       await transaction.finish();
 
