@@ -1,3 +1,4 @@
+import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +31,8 @@ const enableSentry = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterCryptography.enable();
+
   await dotenv.load(fileName: ".env");
 
   HydratedBloc.storage = await HydratedStorage.build(
