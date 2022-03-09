@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:lotti/database/insights_db.dart';
+import 'package:lotti/services/editor_state_service.dart';
 import 'package:lotti/services/link_service.dart';
 import 'package:lotti/services/notification_service.dart';
 import 'package:lotti/services/sync_config_service.dart';
@@ -32,5 +33,6 @@ void registerSingletons() {
   getIt.registerSingleton<SyncInboxService>(SyncInboxService());
   getIt.registerSingleton<LinkService>(LinkService());
   getIt.registerSingleton<NotificationService>(NotificationService());
+  getIt.registerSingleton<EditorStateService>(EditorStateService());
   getIt.registerSingleton<Maintenance>(Maintenance());
 }
