@@ -37,6 +37,7 @@ class _DashboardHealthChartState extends State<DashboardHealthChart> {
   final HealthImport _healthImport = getIt<HealthImport>();
 
   Observation? selected;
+  final _myState = charts.UserManagedState<DateTime>();
 
   @override
   void initState() {
@@ -80,6 +81,10 @@ class _DashboardHealthChartState extends State<DashboardHealthChart> {
       if (model.hasDatumSelection) {
         Observation newSelection =
             model.selectedDatum.first.datum as Observation;
+
+        _myState.selectionModels[charts.SelectionModelType.info] =
+            charts.UserManagedSelectionModel(model: model);
+
         setState(() {
           selected =
               selected?.dateTime == newSelection.dateTime ? null : newSelection;
@@ -127,6 +132,7 @@ class _DashboardHealthChartState extends State<DashboardHealthChart> {
                     behaviors: [
                       chartRangeAnnotation(widget.rangeStart, widget.rangeEnd),
                     ],
+                    userManagedState: _myState,
                     domainAxis: timeSeriesAxis,
                     defaultRenderer: defaultRenderer,
                     selectionModels: [
