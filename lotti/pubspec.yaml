@@ -66,7 +66,7 @@ dependencies:
   flutter_native_timezone: ^2.0.0
   flutter_quill: ^4.0.1
   flutter_secure_storage: ^5.0.0
-  flutter_sound: ^8.3.12
+  flutter_sound: ^9.1.9
   flutter_typeahead: ^3.2.4
   form_builder_validators: ^7.2.0
   freezed_annotation: ^1.1.0
