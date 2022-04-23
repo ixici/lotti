@@ -11,11 +11,12 @@ workflows:
       groups:
         - match
     scripts:
-      - security unlock-keychain ${HOME}/Library/Keychains/login.keychain
+#      - security unlock-keychain ${HOME}/Library/Keychains/login.keychain
       - cd ios && fastlane match appstore --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
       - cd macos && fastlane match appstore --platform macos --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
-      - make all
-#      - flutter build ios --debug --no-codesign
+#      - make all
+      - make clean_test
+      - flutter build ios --debug --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
