@@ -11,6 +11,7 @@ workflows:
       groups:
         - match
     scripts:
+      - security unlock-keychain ${HOME}/Library/Keychains/login.keychain
       - cd ios && fastlane match appstore --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
       - cd macos && fastlane match appstore --platform macos --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
       - make all
