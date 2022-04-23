@@ -13,8 +13,8 @@ workflows:
     scripts:
       - cd ios && fastlane match --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
       - cd macos && fastlane match --platform macos --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
-#      - make clean_test
-      - flutter build ios --debug --no-codesign
+      - make all
+#      - flutter build ios --debug --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
