@@ -70,7 +70,7 @@ bundle:
 #######################################
 
 .PHONY: ios_build
-ios_build: clean_test
+ios_build:
 	flutter build ipa
 
 .PHONY: ios_fastlane_beta
@@ -101,7 +101,7 @@ ios_upload:
 ios: ios_build ios_fastlane_beta
 
 .PHONY: macos_build
-macos_build: clean_test
+macos_build:
 	flutter build macos
 
 .PHONY: macos_archive
@@ -153,7 +153,7 @@ windows: clean_test
 	flutter build windows
 
 .PHONY: all
-all: ios macos
+all: clean_test ios macos
 
 .PHONY: find_unused
 find_unused:
