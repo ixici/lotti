@@ -16,7 +16,6 @@ workflows:
       - security list-keychains -s "KEYCHAIN_NAME" "${OLD_KEYCHAIN_NAMES[@]}"
       - security unlock-keychain -p "KEYCHAIN_PASSWORD" "KEYCHAIN_NAME"
       - security set-keychain-settings "${TESTING_KEYCHAIN}"
-      - security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_NAME}"
 
       #      - security unlock-keychain ${HOME}/Library/Keychains/login.keychain
       - cd ios && fastlane match appstore --generate_apple_certs false --git_basic_authorization $MATCH_GIT_BASIC_AUTHORIZATION --readonly true && cd ..
