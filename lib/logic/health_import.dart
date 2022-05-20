@@ -58,8 +58,13 @@ class HealthImport {
         loggingDb.startTransaction('getActivityHealthData()', 'task');
 
     final flutterHealthFit = FlutterHealthFit();
-    final bool isAuthorized = await FlutterHealthFit().authorize();
+    final HealthFitAuthorizationResult authorizationResult =
+        await FlutterHealthFit().authorize();
+    final bool isAuthorized =
+        authorizationResult.status == HealthFitAuthorizationStatus.authorized;
+
     final bool isAnyAuth = await flutterHealthFit.isAnyPermissionAuthorized();
+
     debugPrint(
         'flutterHealthFit isAuthorized: $isAuthorized, isAnyAuth: $isAnyAuth');
 
@@ -85,16 +90,18 @@ class HealthImport {
         await persistenceLogic.createQuantitativeEntry(activityForDay);
       }
     }
+    await FlutterHealthFit().getStepsBySegment(start, end)
+    // final Map<DateTime, int> stepCounts = await FlutterHealthFit()
+    //     .getStepsBySegment(dateFrom.millisecondsSinceEpoch,
+    //         dateToOrNow.millisecondsSinceEpoch, 1, TimeUnit.days);
+    // addEntries(stepCounts, 'cumulative_step_count');
+    //
+    // final Map<DateTime, int> flights = await FlutterHealthFit()
+    //     .getFlightsBySegment(dateFrom.millisecondsSinceEpoch,
+    //         dateToOrNow.millisecondsSinceEpoch, 1, TimeUnit.days);
+    //
+    // addEntries(flights, 'cumulative_flights_climbed');
 
-    final Map<DateTime, int> stepCounts = await FlutterHealthFit()
-        .getStepsBySegment(dateFrom.millisecondsSinceEpoch,
-            dateToOrNow.millisecondsSinceEpoch, 1, TimeUnit.days);
-    addEntries(stepCounts, 'cumulative_step_count');
-
-    final Map<DateTime, int> flights = await FlutterHealthFit()
-        .getFlightsBySegment(dateFrom.millisecondsSinceEpoch,
-            dateToOrNow.millisecondsSinceEpoch, 1, TimeUnit.days);
-    addEntries(flights, 'cumulative_flights_climbed');
     await transaction.finish();
   }
 
@@ -208,7 +215,12 @@ class HealthImport {
         loggingDb.startTransaction('getActivityHealthData()', 'task');
     debugPrint('getWorkoutsHealthData $dateFrom - $dateTo');
     final flutterHealthFit = FlutterHealthFit();
-    final bool isAuthorized = await FlutterHealthFit().authorize();
+
+    final HealthFitAuthorizationResult authorizationResult =
+        await FlutterHealthFit().authorize();
+    final bool isAuthorized =
+        authorizationResult.status == HealthFitAuthorizationStatus.authorized;
+
     final bool isAnyAuth = await flutterHealthFit.isAnyPermissionAuthorized();
     debugPrint(
         'getWorkoutsHealthData isAuthorized: $isAuthorized, isAnyAuth: $isAnyAuth');

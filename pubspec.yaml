@@ -1,7 +1,7 @@
 name: lotti
 description: A Smart Journal.
 publish_to: 'none'
-version: 0.8.11+886
+version: 0.8.12+887
 
 msix_config:
   display_name: Lotti
@@ -26,7 +26,7 @@ dependencies:
   flutter_health_fit:
     git:
       url: https://github.com/metaflowltd/flutter_health_fit.git
-      ref: 30102b6
+      ref: cc455f9
 
   # research_package: ^0.6.7
   research_package:
