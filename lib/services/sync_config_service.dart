@@ -3,20 +3,23 @@ import 'dart:convert';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lotti/classes/config.dart';
+import 'package:lotti/get_it.dart';
+import 'package:lotti/services/vector_clock_service.dart';
+import 'package:lotti/sync/imap_client.dart';
+import 'package:lotti/sync/inbox_service.dart';
 
 class SyncConfigService {
   final _storage = const FlutterSecureStorage();
-  final String sharedSecretKey = 'sharedSecret';
-  final String imapConfigKey = 'imapConfig';
+  final sharedSecretKey = 'sharedSecret';
+  final imapConfigKey = 'imapConfig';
+
+  Future<String?> getSharedKey() async {
+    return _storage.read(key: sharedSecretKey);
+  }
 
   Future<SyncConfig?> getSyncConfig() async {
-    String? sharedKey = await _storage.read(key: sharedSecretKey);
-    String? imapConfigJson = await _storage.read(key: imapConfigKey);
-    ImapConfig? imapConfig;
-
-    if (imapConfigJson != null) {
-      imapConfig = ImapConfig.fromJson(json.decode(imapConfigJson));
-    }
+    final sharedKey = await getSharedKey();
+    final imapConfig = await getImapConfig();
 
     if (sharedKey != null && imapConfig != null) {
       return SyncConfig(
@@ -28,13 +31,15 @@ class SyncConfigService {
   }
 
   Future<void> generateSharedKey() async {
-    final Key key = Key.fromSecureRandom(32);
-    String sharedKey = key.base64;
+    final key = Key.fromSecureRandom(32);
+    final sharedKey = key.base64;
     await _storage.write(key: sharedSecretKey, value: sharedKey);
   }
 
   Future<void> setSyncConfig(String configJson) async {
-    SyncConfig syncConfig = SyncConfig.fromJson(json.decode(configJson));
+    final syncConfig = SyncConfig.fromJson(
+      json.decode(configJson) as Map<String, dynamic>,
+    );
     await _storage.write(
       key: sharedSecretKey,
       value: syncConfig.sharedSecret,
@@ -49,8 +54,35 @@ class SyncConfigService {
     await _storage.delete(key: sharedSecretKey);
   }
 
+  Future<void> deleteImapConfig() async {
+    await _storage.delete(key: imapConfigKey);
+  }
+
   Future<void> setImapConfig(ImapConfig imapConfig) async {
-    String json = jsonEncode(imapConfig);
+    final json = jsonEncode(imapConfig);
     await _storage.write(key: imapConfigKey, value: json);
+  }
+
+  Future<bool> testConnection(SyncConfig syncConfig) async {
+    final client = await createImapClient(syncConfig);
+    return client != null;
+  }
+
+  Future<ImapConfig?> getImapConfig() async {
+    final imapConfigJson = await _storage.read(key: imapConfigKey);
+    ImapConfig? imapConfig;
+
+    if (imapConfigJson != null) {
+      imapConfig = ImapConfig.fromJson(
+        json.decode(imapConfigJson) as Map<String, dynamic>,
+      );
+    }
+
+    return imapConfig;
+  }
+
+  Future<void> resetOffset() async {
+    await _storage.delete(key: lastReadUidKey);
+    await getIt<VectorClockService>().setNewHost();
   }
 }

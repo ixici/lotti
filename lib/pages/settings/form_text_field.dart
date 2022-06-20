@@ -5,15 +5,17 @@ import 'package:lotti/theme.dart';
 
 class FormTextField extends StatelessWidget {
   const FormTextField({
-    Key? key,
+    super.key,
     required this.initialValue,
     required this.name,
     required this.labelText,
-  }) : super(key: key);
+    this.fieldRequired = true,
+  });
 
   final String initialValue;
   final String name;
   final String labelText;
+  final bool fieldRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +26,11 @@ class FormTextField extends StatelessWidget {
       initialValue: initialValue,
       textCapitalization: TextCapitalization.sentences,
       keyboardAppearance: Brightness.dark,
-      validator: FormBuilderValidators.required(context),
+      validator: fieldRequired ? FormBuilderValidators.required() : null,
       style: labelStyle,
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(color: AppColors.entryTextColor, fontSize: 16),
+        labelStyle: formLabelStyle,
       ),
     );
   }

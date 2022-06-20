@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lotti/classes/tag_type_definitions.dart';
 import 'package:tinycolor2/tinycolor2.dart';
-
-import 'classes/tag_type_definitions.dart';
 
 Color getTagColor(TagEntity tagEntity) {
   if (tagEntity.private) {
@@ -113,7 +112,7 @@ class AppTheme {
   );
 }
 
-const double chipBorderRadius = 8.0;
+const double chipBorderRadius = 8;
 
 const chipPadding = EdgeInsets.symmetric(
   vertical: 2,
@@ -131,14 +130,14 @@ TextStyle inputStyle = TextStyle(
   color: AppColors.entryTextColor,
   fontWeight: FontWeight.bold,
   fontFamily: 'Lato',
-  fontSize: 18.0,
+  fontSize: 18,
 );
 
 TextStyle textStyle = TextStyle(
   color: AppColors.entryTextColor,
   fontFamily: 'Oswald',
   fontWeight: FontWeight.w400,
-  fontSize: 16.0,
+  fontSize: 16,
 );
 
 TextStyle textStyleLarger = textStyle.copyWith(
@@ -154,14 +153,19 @@ TextStyle labelStyleLarger = textStyleLarger.copyWith(
 TextStyle labelStyle = TextStyle(
   color: AppColors.entryTextColor,
   fontWeight: FontWeight.w500,
-  fontSize: 18.0,
+  fontSize: 18,
 );
 
 TextStyle formLabelStyle = TextStyle(
   color: AppColors.entryTextColor,
-  height: 1.6,
   fontFamily: 'Oswald',
-  fontSize: 20,
+  fontSize: 16,
+);
+
+TextStyle buttonLabelStyle = TextStyle(
+  color: AppColors.entryTextColor,
+  fontFamily: 'Oswald',
+  fontSize: 16,
 );
 
 TextStyle settingsLabelStyle = TextStyle(
@@ -217,10 +221,10 @@ TextStyle chartTitleStyle = TextStyle(
 
 const taskFormFieldStyle = TextStyle(color: Colors.black87);
 
-const saveButtonStyle = TextStyle(
+TextStyle saveButtonStyle = TextStyle(
   fontSize: 20,
   fontFamily: 'Oswald',
-  fontWeight: FontWeight.bold,
+  color: AppColors.error,
 );
 
 const segmentItemStyle = TextStyle(

@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lotti/blocs/sync/sync_config_cubit.dart';
-import 'package:lotti/classes/config.dart';
 import 'package:lotti/widgets/sync/qr_widget.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class EncryptionQrReaderWidget extends StatefulWidget {
-  const EncryptionQrReaderWidget({Key? key}) : super(key: key);
+  const EncryptionQrReaderWidget({super.key});
 
   @override
   State<StatefulWidget> createState() => _EncryptionQrReaderWidgetState();
@@ -18,6 +18,14 @@ class EncryptionQrReaderWidget extends StatefulWidget {
 class _EncryptionQrReaderWidgetState extends State<EncryptionQrReaderWidget> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
+
+  @override
+  void initState() {
+    super.initState();
+    Permission.camera.request().then((cameraPermission) {
+      debugPrint('cameraPermission $cameraPermission');
+    });
+  }
 
   @override
   void reassemble() {
@@ -31,56 +39,47 @@ class _EncryptionQrReaderWidgetState extends State<EncryptionQrReaderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    AppLocalizations localizations = AppLocalizations.of(context)!;
+    final localizations = AppLocalizations.of(context)!;
 
     return BlocBuilder<SyncConfigCubit, SyncConfigState>(
-        builder: (context, SyncConfigState state) {
-      void _onQRViewCreated(QRViewController controller) {
-        this.controller = controller;
-        controller.scannedDataStream.listen((scanData) {
-          if (scanData.code != null) {
-            context.read<SyncConfigCubit>().setSyncConfig(scanData.code!);
-          }
-        });
-      }
+      builder: (context, SyncConfigState state) {
+        void _onQRViewCreated(QRViewController controller) {
+          this.controller = controller;
 
-      return Center(
-        child: state.when(
-          (String? sharedKey, ImapConfig? imapConfig) => TextButton(
-            style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16.0,
-                  horizontal: 32.0,
+          controller.scannedDataStream.listen((scanData) {
+            if (scanData.code != null) {
+              context.read<SyncConfigCubit>().setSyncConfig(scanData.code!);
+            }
+          });
+        }
+
+        final camDimension = MediaQuery.of(context).size.width - 100;
+
+        return Center(
+          child: state.maybeWhen(
+            empty: () => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: camDimension,
+                    width: camDimension,
+                    child: QRView(
+                      key: qrKey,
+                      onQRViewCreated: _onQRViewCreated,
+                    ),
+                  ),
                 ),
-                backgroundColor: Colors.red),
-            onPressed: () => context.read<SyncConfigCubit>().deleteSharedKey(),
-            child: Text(
-              localizations.settingsSyncDeleteKeyButton,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+                StatusTextWidget(localizations.settingsSyncScanning),
+              ],
             ),
+            //  orElse: () => const SizedBox.shrink(),
+            orElse: () => const DeleteSyncConfigButton(),
           ),
-          loading: () => StatusTextWidget(localizations.settingsSyncLoadingKey),
-          generating: () => StatusTextWidget(localizations.settingsSyncGenKey),
-          empty: () => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 300.0,
-                width: 300.0,
-                child: QRView(
-                  key: qrKey,
-                  onQRViewCreated: _onQRViewCreated,
-                ),
-              ),
-              StatusTextWidget(localizations.settingsSyncScanning),
-            ],
-          ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   @override

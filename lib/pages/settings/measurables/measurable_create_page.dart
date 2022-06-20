@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lotti/classes/entity_definitions.dart';
+import 'package:lotti/pages/empty_scaffold.dart';
 import 'package:lotti/pages/settings/measurables/measurable_details_page.dart';
 import 'package:lotti/utils/file_utils.dart';
 
 class CreateMeasurablePage extends StatefulWidget {
-  const CreateMeasurablePage({
-    Key? key,
-  }) : super(key: key);
+  const CreateMeasurablePage({super.key});
 
   @override
   State<CreateMeasurablePage> createState() => _CreateMeasurablePageState();
@@ -19,7 +18,7 @@ class _CreateMeasurablePageState extends State<CreateMeasurablePage> {
   void initState() {
     super.initState();
 
-    final DateTime now = DateTime.now();
+    final now = DateTime.now();
     _measurableDataType = MeasurableDataType(
       id: uuid.v1(),
       displayName: '',
@@ -35,7 +34,7 @@ class _CreateMeasurablePageState extends State<CreateMeasurablePage> {
   @override
   Widget build(BuildContext context) {
     if (_measurableDataType == null) {
-      return const SizedBox.shrink();
+      return const EmptyScaffoldWithTitle('');
     }
 
     return MeasurableDetailsPage(dataType: _measurableDataType!);

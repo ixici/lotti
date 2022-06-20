@@ -6,19 +6,19 @@ import 'package:location/location.dart';
 import 'package:lotti/classes/geolocation.dart';
 
 class DeviceLocation {
-  late Location location;
-
   DeviceLocation() {
     location = Location();
     init();
   }
 
-  void init() async {
+  late Location location;
+
+  Future<void> init() async {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
-    if (Platform.isLinux || Platform.isWindows) {
-      return null;
+    if (Platform.isWindows) {
+      return;
     }
 
     serviceEnabled = await location.serviceEnabled();
@@ -46,17 +46,31 @@ class DeviceLocation {
   }
 
   Future<Geolocation?> getCurrentGeoLocation() async {
-    DateTime now = DateTime.now();
+    final now = DateTime.now();
 
     if (Platform.isWindows) {
       return null;
     }
 
     if (Platform.isLinux) {
-      final GeoClueLocation locationData =
-          await GeoClue.getLocation(desktopId: '<desktop-id>');
-      double? longitude = locationData.longitude;
-      double? latitude = locationData.latitude;
+      final manager = GeoClueManager();
+      await manager.connect();
+      final client = await manager.getClient();
+      await client.setDesktopId('<desktop-id>');
+      await client.setRequestedAccuracyLevel(GeoClueAccuracyLevel.exact);
+      await client.start();
+
+      final locationData = await client.locationUpdated
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: (_) => manager.close(),
+          )
+          .first;
+
+      await client.stop();
+
+      final longitude = locationData.longitude;
+      final latitude = locationData.latitude;
 
       return Geolocation(
         createdAt: now,
@@ -75,9 +89,9 @@ class DeviceLocation {
       );
     }
 
-    final LocationData locationData = await location.getLocation();
-    double? longitude = locationData.longitude;
-    double? latitude = locationData.latitude;
+    final locationData = await location.getLocation();
+    final longitude = locationData.longitude;
+    final latitude = locationData.latitude;
     if (longitude != null && latitude != null) {
       return Geolocation(
         createdAt: now,

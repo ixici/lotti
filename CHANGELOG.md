@@ -6,6 +6,132 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added:
+- Tests for Sync assistant logic (no UI changes)
+- Tests for Sync assistant widgets (no UI changes)
+
+## [0.8.62] - 2022-06-18
+### Changed:
+- Guard Save button in new measurement by validation
+
+## [0.8.61] - 2022-06-17
+### Fixed:
+- Saving tags and other form data
+
+## [0.8.60] - 2022-06-17
+### Changed:
+- Fill survey directly from dashboard
+
+## [0.8.59] - 2022-06-17
+### Fixed:
+- Save dashboard without daily review time filled out
+
+## [0.8.58] - 2022-06-17
+### Added:
+- Workout type swimming
+
+## [0.8.57] - 2022-06-16
+### Fixed:
+- Grey boxes in flagged entries that do not have text yet
+- Header margin on mobile
+
+## [0.8.56] - 2022-06-16
+### Fixed:
+- App bar when creating new entries
+
+## [0.8.55] - 2022-06-16
+### Changed:
+- Improvements in Sync Assistant
+- Prevent progression in Sync Assistant when not allowed
+
+## [0.8.54] - 2022-06-14
+### Added:
+- Check valid mail account in sync assistant
+- Check saved IMAP config in sync assistant
+
+## [0.8.53] - 2022-06-13
+### Added:
+- App bar with save button in new measurement page
+- Ignore chart interaction on journal card
+
+## [0.8.52] - 2022-06-13
+### Changed:
+- Dev playground removed, not useful
+
+## [0.8.51] - 2022-06-13
+### Added:
+- Search field for tasks in full width
+- Search field for measurables in full width
+
+## [0.8.50] - 2022-06-13
+### Changed:
+- Indicate unsaved changes on tag edit page
+- Indicate unsaved changes on measurable data type edit page
+- Indicate unsaved changes on dashboard edit page
+
+## [0.8.49] - 2022-06-13
+### Fixed:
+- Timezone name on Linux
+
+## [0.8.48] - 2022-06-13
+### Fixed:
+- Location on Linux
+
+## [0.8.47] - 2022-06-12
+### Changed:
+- Improve first-time user experience for measurables
+
+## [0.8.46] - 2022-06-12
+### Changed:
+- Improve layout of health data entry
+- Improve layout of measurable data entry
+
+## [0.8.45] - 2022-06-12
+### Fixed:
+- Sync of entities without vector clock
+- Dashboards sorted alphabetically
+
+### Changed:
+- Optional description field in dashboard definitions
+- Optional description and unit fields in measurable definitions
+
+### Added:
+- Maintenance task for reprocessing messages
+
+## [0.8.44] - 2022-06-12
+### Changed:
+- Layout improvements in empty dashboards page
+
+## [0.8.43] - 2022-06-12
+### Changed:
+- Allow dashboards with the same name
+- Add maintenance task for purging deleted items
+
+## [0.8.42] - 2022-06-11
+### Changed:
+- Auto-sizing text in Sync Assistant
+
+## [0.8.41] - 2022-06-10
+### Changed:
+- Default IMAP folder for sync
+
+## [0.8.40] - 2022-06-09
+### Fixed:
+- No health import on desktop
+
+## [0.8.39] - 2022-06-09
+### Changed:
+- Ignore foreign messages in IMAP folder
+
+## [0.8.38] - 2022-06-09
+### Fixed:
+- Romanian language support in forms
+
+## [0.8.37] - 2022-06-09
+### Changed
+- Improved icons
+
+## [0.8.36] - 2022-06-08
+### Added:
 - Screenshot from desktop menu
 
 ## [0.8.35] - 2022-06-08

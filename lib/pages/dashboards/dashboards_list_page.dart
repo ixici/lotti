@@ -4,10 +4,12 @@ import 'package:lotti/database/database.dart';
 import 'package:lotti/get_it.dart';
 import 'package:lotti/services/nav_service.dart';
 import 'package:lotti/theme.dart';
+import 'package:lotti/utils/sort.dart';
+import 'package:lotti/widgets/app_bar/dashboards_app_bar.dart';
 import 'package:lotti/widgets/charts/empty_dashboards_widget.dart';
 
 class DashboardsListPage extends StatefulWidget {
-  const DashboardsListPage({Key? key}) : super(key: key);
+  const DashboardsListPage({super.key});
 
   @override
   State<DashboardsListPage> createState() => _DashboardsListPageState();
@@ -25,58 +27,58 @@ class _DashboardsListPageState extends State<DashboardsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<DashboardDefinition>>(
-      stream: stream,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<List<DashboardDefinition>> snapshot,
-      ) {
-        List<DashboardDefinition> items = snapshot.data ?? [];
-        List<DashboardDefinition> filtered = items
-            .where((DashboardDefinition dashboard) =>
-                dashboard.name.toLowerCase().contains(match) &&
-                dashboard.active)
-            .toList();
+    return Scaffold(
+      backgroundColor: AppColors.bodyBgColor,
+      appBar: const DashboardsAppBar(),
+      body: StreamBuilder<List<DashboardDefinition>>(
+        stream: stream,
+        builder: (
+          BuildContext context,
+          AsyncSnapshot<List<DashboardDefinition>> snapshot,
+        ) {
+          final dashboards =
+              filteredSortedDashboards(snapshot.data ?? [], match);
 
-        if (items.isEmpty) {
-          return const EmptyDashboards();
-        }
+          if (dashboards.isEmpty) {
+            return const EmptyDashboards();
+          }
 
-        return ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(8.0),
-          children: List.generate(
-            filtered.length,
-            (int index) {
-              return DashboardCard(
-                dashboard: filtered.elementAt(index),
-                index: index,
-              );
-            },
-          ),
-        );
-      },
+          return ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.all(8),
+            children: List.generate(
+              dashboards.length,
+              (int index) {
+                return DashboardCard(
+                  dashboard: dashboards.elementAt(index),
+                  index: index,
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class DashboardCard extends StatelessWidget {
-  final DashboardDefinition dashboard;
-  final int index;
-
   const DashboardCard({
-    Key? key,
+    super.key,
     required this.dashboard,
     required this.index,
-  }) : super(key: key);
+  });
+
+  final DashboardDefinition dashboard;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: AppColors.entryCardColor,
-      elevation: 8.0,
+      elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
         contentPadding:
@@ -86,7 +88,7 @@ class DashboardCard extends StatelessWidget {
           style: TextStyle(
             color: AppColors.entryTextColor,
             fontFamily: 'Oswald',
-            fontSize: 24.0,
+            fontSize: 24,
             fontWeight: FontWeight.w300,
           ),
         ),
@@ -95,11 +97,10 @@ class DashboardCard extends StatelessWidget {
           style: TextStyle(
             color: AppColors.entryTextColor,
             fontFamily: 'Oswald',
-            fontSize: 16.0,
+            fontSize: 16,
             fontWeight: FontWeight.w300,
           ),
         ),
-        enabled: true,
         onTap: () {
           pushNamedRoute('/dashboards/${dashboard.id}');
         },

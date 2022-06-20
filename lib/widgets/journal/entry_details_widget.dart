@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
-import 'package:lotti/classes/entity_definitions.dart';
 import 'package:lotti/classes/journal_entities.dart';
 import 'package:lotti/classes/task.dart';
 import 'package:lotti/database/database.dart';
@@ -19,27 +18,28 @@ import 'package:lotti/widgets/journal/editor/editor_tools.dart';
 import 'package:lotti/widgets/journal/editor/editor_widget.dart';
 import 'package:lotti/widgets/journal/entry_details/entry_detail_footer.dart';
 import 'package:lotti/widgets/journal/entry_details/entry_detail_header.dart';
+import 'package:lotti/widgets/journal/entry_details/health_summary.dart';
+import 'package:lotti/widgets/journal/entry_details/measurement_summary.dart';
+import 'package:lotti/widgets/journal/entry_details/survey_summary.dart';
+import 'package:lotti/widgets/journal/entry_details/workout_summary.dart';
 import 'package:lotti/widgets/journal/entry_image_widget.dart';
-import 'package:lotti/widgets/journal/entry_tools.dart';
-import 'package:lotti/widgets/journal/helpers.dart';
 import 'package:lotti/widgets/journal/journal_card.dart';
 import 'package:lotti/widgets/journal/tags_widget.dart';
-import 'package:lotti/widgets/misc/survey_summary.dart';
 import 'package:lotti/widgets/tasks/task_form.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
 
 class EntryDetailWidget extends StatefulWidget {
-  final String itemId;
-  final bool popOnDelete;
-  final bool showTaskDetails;
-
   const EntryDetailWidget({
-    Key? key,
+    super.key,
     @PathParam() required this.itemId,
     required this.popOnDelete,
     this.showTaskDetails = false,
-  }) : super(key: key);
+  });
+
+  final String itemId;
+  final bool popOnDelete;
+  final bool showTaskDetails;
 
   @override
   State<EntryDetailWidget> createState() => _EntryDetailWidgetState();
@@ -78,19 +78,19 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
         BuildContext context,
         AsyncSnapshot<JournalEntity?> snapshot,
       ) {
-        JournalEntity? item = snapshot.data;
+        final item = snapshot.data;
         if (item == null || item.meta.deletedAt != null) {
           return const SizedBox.shrink();
         }
 
-        bool isTask = item is Task;
-        bool isAudio = item is JournalAudio;
+        final isTask = item is Task;
+        final isAudio = item is JournalAudio;
 
         if ((isTask || isAudio) && !widget.showTaskDetails) {
           return JournalCard(item: item);
         }
 
-        QuillController controller = makeController(
+        final controller = makeController(
           serializedQuill: _editorStateService.getDelta(widget.itemId) ??
               item.entryText?.quill,
           selection: _editorStateService.getSelection(widget.itemId),
@@ -129,8 +129,8 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Container(
+            borderRadius: BorderRadius.circular(8),
+            child: ColoredBox(
               color: AppColors.entryCardColor,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,6 +162,10 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
                   ),
                   item.maybeMap(
                     task: (_) => const SizedBox.shrink(),
+                    quantitative: (_) => const SizedBox.shrink(),
+                    measurement: (_) => const SizedBox.shrink(),
+                    workout: (_) => const SizedBox.shrink(),
+                    survey: (_) => const SizedBox.shrink(),
                     orElse: () {
                       return EditorWidget(
                         controller: controller,
@@ -171,37 +175,14 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
                       );
                     },
                   ),
-                  item.maybeMap(
+                  item.map(
                     journalAudio: (JournalAudio audio) {
                       return const AudioPlayerWidget();
                     },
-                    workout: (WorkoutEntry workout) {
-                      WorkoutData data = workout.data;
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: EntryTextWidget(data.toString()),
-                      );
-                    },
-                    survey: (SurveyEntry surveyEntry) =>
-                        SurveySummaryWidget(surveyEntry),
-                    quantitative: (qe) => qe.data.map(
-                      cumulativeQuantityData: (qd) => Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: InfoText(
-                          'End: ${df.format(qe.meta.dateTo)}'
-                          '\n${formatType(qd.dataType)}: '
-                          '${nf.format(qd.value)} ${formatUnit(qd.unit)}',
-                        ),
-                      ),
-                      discreteQuantityData: (qd) => Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: InfoText(
-                          'End: ${df.format(qe.meta.dateTo)}'
-                          '\n${formatType(qd.dataType)}: '
-                          '${nf.format(qd.value)} ${formatUnit(qd.unit)}',
-                        ),
-                      ),
-                    ),
+                    workout: WorkoutSummary.new,
+                    survey: SurveySummary.new,
+                    quantitative: HealthSummary.new,
+                    measurement: MeasurementSummary.new,
                     task: (Task task) {
                       final formKey = GlobalKey<FormBuilderState>();
 
@@ -218,18 +199,18 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
                           return;
                         }
                         //final DateTime due = formData['due'];
-                        final String title = formData['title'];
-                        final DateTime dt = formData['estimate'];
-                        final String status = formData['status'];
+                        final title = formData['title'] as String;
+                        final dt = formData['estimate'] as DateTime;
+                        final status = formData['status'] as String;
 
-                        final Duration estimate = Duration(
+                        final estimate = Duration(
                           hours: dt.hour,
                           minutes: dt.minute,
                         );
 
                         HapticFeedback.heavyImpact();
 
-                        TaskData updatedData = task.data.copyWith(
+                        final updatedData = task.data.copyWith(
                           title: title,
                           estimate: estimate,
                           // due: due,
@@ -252,9 +233,9 @@ class _EntryDetailWidgetState extends State<EntryDetailWidget> {
                         task: task,
                       );
                     },
-                    orElse: () {
-                      return const SizedBox.shrink();
-                    },
+                    habitCompletion: (_) => const SizedBox.shrink(),
+                    journalEntry: (_) => const SizedBox.shrink(),
+                    journalImage: (_) => const SizedBox.shrink(),
                   ),
                   EntryDetailFooter(
                     itemId: widget.itemId,

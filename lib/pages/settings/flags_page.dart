@@ -4,9 +4,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lotti/database/database.dart';
 import 'package:lotti/get_it.dart';
 import 'package:lotti/theme.dart';
+import 'package:lotti/widgets/app_bar/title_app_bar.dart';
 
 class FlagsPage extends StatefulWidget {
-  const FlagsPage({Key? key}) : super(key: key);
+  const FlagsPage({super.key});
 
   @override
   State<FlagsPage> createState() => _FlagsPageState();
@@ -24,48 +25,53 @@ class _FlagsPageState extends State<FlagsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<ConfigFlag>>(
-      stream: stream,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<List<ConfigFlag>> snapshot,
-      ) {
-        List<ConfigFlag> items = snapshot.data ?? [];
-        debugPrint('$items');
+    final localizations = AppLocalizations.of(context)!;
 
-        return ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(8.0),
-          children: List.generate(
-            items.length,
-            (int index) {
-              return ConfigFlagCard(
-                item: items.elementAt(index),
-                index: index,
-              );
-            },
-          ),
-        );
-      },
+    return Scaffold(
+      appBar: TitleAppBar(title: localizations.settingsFlagsTitle),
+      backgroundColor: AppColors.bodyBgColor,
+      body: StreamBuilder<List<ConfigFlag>>(
+        stream: stream,
+        builder: (
+          BuildContext context,
+          AsyncSnapshot<List<ConfigFlag>> snapshot,
+        ) {
+          final items = snapshot.data ?? [];
+          debugPrint('$items');
+
+          return ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.all(8),
+            children: List.generate(
+              items.length,
+              (int index) {
+                return ConfigFlagCard(
+                  item: items.elementAt(index),
+                  index: index,
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class ConfigFlagCard extends StatelessWidget {
-  final JournalDb _db = getIt<JournalDb>();
+  ConfigFlagCard({
+    super.key,
+    required this.item,
+    required this.index,
+  });
 
+  final JournalDb _db = getIt<JournalDb>();
   final ConfigFlag item;
   final int index;
 
-  ConfigFlagCard({
-    Key? key,
-    required this.item,
-    required this.index,
-  }) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    AppLocalizations localizations = AppLocalizations.of(context)!;
+    final localizations = AppLocalizations.of(context)!;
 
     String getLocalizedDescription(ConfigFlag flag) {
       switch (flag.name) {
@@ -86,9 +92,9 @@ class ConfigFlagCard extends StatelessWidget {
 
     return Card(
       color: AppColors.headerBgColor,
-      elevation: 8.0,
+      elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: SingleChildScrollView(
         child: ListTile(
@@ -102,7 +108,7 @@ class ConfigFlagCard extends StatelessWidget {
                 style: TextStyle(
                   color: AppColors.entryTextColor,
                   fontFamily: 'Oswald',
-                  fontSize: 20.0,
+                  fontSize: 20,
                 ),
               ),
               CupertinoSwitch(
@@ -114,7 +120,6 @@ class ConfigFlagCard extends StatelessWidget {
               ),
             ],
           ),
-          enabled: true,
         ),
       ),
     );

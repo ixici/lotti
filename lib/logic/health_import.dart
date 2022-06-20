@@ -9,13 +9,16 @@ import 'package:flutter_health_fit/workout_sample.dart';
 import 'package:health/health.dart';
 import 'package:lotti/classes/entity_definitions.dart';
 import 'package:lotti/classes/health.dart';
-import 'package:lotti/classes/journal_entities.dart';
 import 'package:lotti/database/database.dart';
 import 'package:lotti/database/logging_db.dart';
 import 'package:lotti/get_it.dart';
 import 'package:lotti/logic/persistence_logic.dart';
+import 'package:lotti/utils/platform.dart';
 
 class HealthImport {
+  HealthImport() : super() {
+    getPlatform();
+  }
   final PersistenceLogic persistenceLogic = getIt<PersistenceLogic>();
   final JournalDb _db = getIt<JournalDb>();
   final HealthFactory _healthFactory = HealthFactory();
@@ -24,23 +27,19 @@ class HealthImport {
   late final String platform;
   String? deviceType;
 
-  HealthImport() : super() {
-    getPlatform();
-  }
-
   Future<void> getPlatform() async {
     platform = Platform.isIOS
         ? 'IOS'
         : Platform.isAndroid
             ? 'ANDROID'
             : '';
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final deviceInfo = DeviceInfoPlugin();
     if (Platform.isIOS) {
-      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      final iosInfo = await deviceInfo.iosInfo;
       deviceType = iosInfo.utsname.machine;
     }
     if (Platform.isAndroid) {
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      final androidInfo = await deviceInfo.androidInfo;
       deviceType = androidInfo.model;
     }
   }
@@ -49,24 +48,28 @@ class HealthImport {
     required DateTime dateFrom,
     required DateTime dateTo,
   }) async {
-    DateTime now = DateTime.now();
+    final now = DateTime.now();
 
-    final LoggingDb loggingDb = getIt<LoggingDb>();
+    final loggingDb = getIt<LoggingDb>();
     final transaction =
         loggingDb.startTransaction('getActivityHealthData()', 'task');
-    await authorizeHealth(activityTypes);
+    final accessGranted = await authorizeHealth(activityTypes);
+
+    if (!accessGranted) {
+      return;
+    }
 
     Future<void> addEntries(Map<DateTime, num> data, String type) async {
-      List<MapEntry<DateTime, num>> entries = List.from(data.entries);
-      entries.sort((a, b) => a.key.compareTo(b.key));
+      final entries = List<MapEntry<DateTime, num>>.from(data.entries)
+        ..sort((a, b) => a.key.compareTo(b.key));
 
-      for (MapEntry<DateTime, num> dailyStepsEntry in entries) {
-        DateTime dayStart = dailyStepsEntry.key;
-        DateTime dayEnd = dayStart
+      for (final dailyStepsEntry in entries) {
+        final dayStart = dailyStepsEntry.key;
+        final dayEnd = dayStart
             .add(const Duration(days: 1))
             .subtract(const Duration(milliseconds: 1));
-        DateTime dateToOrNow = dayEnd.isAfter(now) ? now : dayEnd;
-        CumulativeQuantityData activityForDay = CumulativeQuantityData(
+        final dateToOrNow = dayEnd.isAfter(now) ? now : dayEnd;
+        final activityForDay = CumulativeQuantityData(
           dateFrom: dayStart,
           dateTo: dateToOrNow,
           value: dailyStepsEntry.value,
@@ -79,12 +82,12 @@ class HealthImport {
       }
     }
 
-    Map<DateTime, num> stepsByDay = {};
-    Map<DateTime, num> flightsByDay = {};
-    Duration range = dateTo.difference(dateFrom);
+    final stepsByDay = <DateTime, num>{};
+    final flightsByDay = <DateTime, num>{};
+    final range = dateTo.difference(dateFrom);
 
-    List<DateTime> days = List<DateTime>.generate(range.inDays + 1, (days) {
-      DateTime day = dateFrom.add(Duration(days: days));
+    final days = List<DateTime>.generate(range.inDays + 1, (days) {
+      final day = dateFrom.add(Duration(days: days));
       return DateTime(
         day.year,
         day.month,
@@ -92,14 +95,21 @@ class HealthImport {
       );
     });
 
-    for (DateTime dateFrom in days) {
+    for (final dateFrom in days) {
       if (dateFrom.isBefore(now)) {
-        DateTime dateTo = DateTime(
-            dateFrom.year, dateFrom.month, dateFrom.day, 23, 59, 59, 999);
+        final dateTo = DateTime(
+          dateFrom.year,
+          dateFrom.month,
+          dateFrom.day,
+          23,
+          59,
+          59,
+          999,
+        );
 
-        int? steps =
+        final steps =
             await _healthFactory.getTotalStepsInInterval(dateFrom, dateTo);
-        int? flightsClimbed = await _healthFactory
+        final flightsClimbed = await _healthFactory
             .getTotalFlightsClimbedInInterval(dateFrom, dateTo);
 
         flightsByDay[dateFrom] = flightsClimbed ?? 0;
@@ -107,13 +117,17 @@ class HealthImport {
       }
     }
 
-    addEntries(stepsByDay, 'cumulative_step_count');
-    addEntries(flightsByDay, 'cumulative_flights_climbed');
+    await addEntries(stepsByDay, 'cumulative_step_count');
+    await addEntries(flightsByDay, 'cumulative_flights_climbed');
     await transaction.finish();
   }
 
   Future<bool> authorizeHealth(List<HealthDataType> types) async {
-    return await _healthFactory.requestAuthorization(types);
+    if (isDesktop) {
+      return false;
+    }
+
+    return _healthFactory.requestAuthorization(types);
   }
 
   Future<void> fetchHealthData({
@@ -121,23 +135,22 @@ class HealthImport {
     required DateTime dateFrom,
     required DateTime dateTo,
   }) async {
-    final LoggingDb loggingDb = getIt<LoggingDb>();
+    final loggingDb = getIt<LoggingDb>();
     final transaction = loggingDb.startTransaction('fetchHealthData()', 'task');
-    bool accessWasGranted = await authorizeHealth(types);
+    final accessWasGranted = await authorizeHealth(types);
 
     if (accessWasGranted) {
       try {
-        DateTime now = DateTime.now();
-        DateTime dateToOrNow = dateTo.isAfter(now) ? now : dateTo;
-        List<HealthDataPoint> dataPoints =
-            await _healthFactory.getHealthDataFromTypes(
+        final now = DateTime.now();
+        final dateToOrNow = dateTo.isAfter(now) ? now : dateTo;
+        final dataPoints = await _healthFactory.getHealthDataFromTypes(
           dateFrom,
           dateToOrNow,
           types,
         );
 
-        for (HealthDataPoint dataPoint in dataPoints.reversed) {
-          DiscreteQuantityData discreteQuantity = DiscreteQuantityData(
+        for (final dataPoint in dataPoints.reversed) {
+          final discreteQuantity = DiscreteQuantityData(
             dateFrom: dataPoint.dateFrom,
             dateTo: dataPoint.dateTo,
             value: dataPoint.value,
@@ -154,14 +167,12 @@ class HealthImport {
       } catch (e) {
         debugPrint('Caught exception in fetchHealthData: $e');
       }
-    } else {
-      debugPrint('Authorization not granted');
     }
     await transaction.finish();
   }
 
   Future<void> fetchHealthDataDelta(String type) async {
-    List<String> actualTypes = [type];
+    var actualTypes = [type];
 
     if (type == 'BLOOD_PRESSURE') {
       actualTypes = [
@@ -172,18 +183,17 @@ class HealthImport {
       actualTypes = ['HealthDataType.WEIGHT'];
     }
 
-    QuantitativeEntry? latest =
-        await _db.latestQuantitativeByType(actualTypes.first);
-    DateTime now = DateTime.now();
+    final latest = await _db.latestQuantitativeByType(actualTypes.first);
+    final now = DateTime.now();
 
-    DateTime dateFrom =
+    final dateFrom =
         latest?.meta.dateFrom ?? now.subtract(defaultFetchDuration);
 
-    List<HealthDataType> healthDataTypes = [];
+    final healthDataTypes = <HealthDataType>[];
 
-    for (String type in actualTypes) {
-      String subType = type.replaceAll('HealthDataType.', '');
-      HealthDataType? healthDataType =
+    for (final type in actualTypes) {
+      final subType = type.replaceAll('HealthDataType.', '');
+      final healthDataType =
           EnumToString.fromString(HealthDataType.values, subType);
 
       if (healthDataType != null) {
@@ -192,14 +202,14 @@ class HealthImport {
     }
 
     if (type.contains('cumulative')) {
-      getActivityHealthData(
+      await getActivityHealthData(
         dateFrom: dateFrom,
         dateTo: now,
       );
     } else {
-      bool accessWasGranted = await authorizeHealth(healthDataTypes);
+      final accessWasGranted = await authorizeHealth(healthDataTypes);
       if (accessWasGranted && healthDataTypes.isNotEmpty) {
-        fetchHealthData(
+        await fetchHealthData(
           types: healthDataTypes,
           dateFrom: dateFrom,
           dateTo: now,
@@ -212,22 +222,22 @@ class HealthImport {
     required DateTime dateFrom,
     required DateTime dateTo,
   }) async {
-    DateTime now = DateTime.now();
-    DateTime dateToOrNow = dateTo.isAfter(now) ? now : dateTo;
-
-    final LoggingDb loggingDb = getIt<LoggingDb>();
+    final now = DateTime.now();
+    final dateToOrNow = dateTo.isAfter(now) ? now : dateTo;
+    final loggingDb = getIt<LoggingDb>();
     final transaction =
         loggingDb.startTransaction('getActivityHealthData()', 'task');
     debugPrint('getWorkoutsHealthData $dateFrom - $dateTo');
 
-    List<WorkoutSample>? workouts =
-        await FlutterHealthFit().getWorkoutsBySegment(
+    await FlutterHealthFit().authorize();
+
+    final workouts = await FlutterHealthFit().getWorkoutsBySegment(
       dateFrom.millisecondsSinceEpoch,
       dateToOrNow.millisecondsSinceEpoch,
     );
 
     workouts?.forEach((WorkoutSample workoutSample) async {
-      WorkoutData workoutData = WorkoutData(
+      final workoutData = WorkoutData(
         dateFrom: workoutSample.start,
         dateTo: workoutSample.end,
         distance: workoutSample.distance,
@@ -243,10 +253,10 @@ class HealthImport {
   }
 
   Future<void> getWorkoutsHealthDataDelta() async {
-    WorkoutEntry? latest = await _db.latestWorkout();
-    DateTime now = DateTime.now();
+    final latest = await _db.latestWorkout();
+    final now = DateTime.now();
 
-    getWorkoutsHealthData(
+    await getWorkoutsHealthData(
       dateFrom: latest?.data.dateFrom ?? now.subtract(defaultFetchDuration),
       dateTo: now,
     );

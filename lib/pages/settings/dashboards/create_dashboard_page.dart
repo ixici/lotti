@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lotti/classes/entity_definitions.dart';
+import 'package:lotti/pages/empty_scaffold.dart';
 import 'package:lotti/pages/settings/dashboards/dashboard_details_page.dart';
 import 'package:lotti/utils/file_utils.dart';
 
 class CreateDashboardPage extends StatefulWidget {
   const CreateDashboardPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<CreateDashboardPage> createState() => _CreateDashboardPageState();
@@ -19,7 +20,7 @@ class _CreateDashboardPageState extends State<CreateDashboardPage> {
   void initState() {
     super.initState();
 
-    final DateTime now = DateTime.now();
+    final now = DateTime.now();
     _dashboardDefinition = DashboardDefinition(
       id: uuid.v1(),
       name: '',
@@ -38,7 +39,7 @@ class _CreateDashboardPageState extends State<CreateDashboardPage> {
   @override
   Widget build(BuildContext context) {
     if (_dashboardDefinition == null) {
-      return const SizedBox.shrink();
+      return const EmptyScaffoldWithTitle('');
     }
     return DashboardDetailPage(dashboard: _dashboardDefinition!);
   }

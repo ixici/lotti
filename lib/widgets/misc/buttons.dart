@@ -1,21 +1,23 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_fadein/flutter_fadein.dart';
+import 'package:lotti/theme.dart';
 
 class Button extends StatelessWidget {
-  final String label;
-  final Color primaryColor;
-  final Color textColor;
-  final Function() onPressed;
-  final EdgeInsets padding;
-
   const Button(
     this.label, {
     this.primaryColor = CupertinoColors.activeBlue,
     this.textColor = CupertinoColors.white,
-    this.padding = const EdgeInsets.all(4.0),
+    this.padding = const EdgeInsets.all(4),
     required this.onPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
+
+  final String label;
+  final Color primaryColor;
+  final Color textColor;
+  final void Function() onPressed;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
@@ -23,24 +25,47 @@ class Button extends StatelessWidget {
       padding: padding,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(
-            vertical: 16.0,
-            horizontal: 32.0,
-          ),
+          padding: const EdgeInsets.all(16),
           primary: primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: onPressed,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
+        child: Text(label, style: buttonLabelStyle),
+      ),
+    );
+  }
+}
+
+class FadeInButton extends StatelessWidget {
+  const FadeInButton(
+    this.label, {
+    this.primaryColor = CupertinoColors.activeBlue,
+    this.textColor = CupertinoColors.white,
+    this.padding = const EdgeInsets.all(4),
+    this.duration = const Duration(seconds: 2),
+    required this.onPressed,
+    super.key,
+  });
+
+  final String label;
+  final Color primaryColor;
+  final Color textColor;
+  final void Function() onPressed;
+  final EdgeInsets padding;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeIn(
+      duration: const Duration(seconds: 2),
+      child: Button(
+        label,
+        onPressed: onPressed,
+        primaryColor: primaryColor,
+        textColor: textColor,
+        padding: padding,
       ),
     );
   }
